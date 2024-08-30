@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
         z.literal("debug"),
         z.literal("fatal"),
         z.literal("trace"),
+        z.literal("time"),
       ]),
       message: z.string().optional(),
     })

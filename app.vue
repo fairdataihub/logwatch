@@ -123,6 +123,7 @@ onMounted(() => {
           "debug",
           "trace",
           "fatal",
+          "time",
         ]),
       }),
     });

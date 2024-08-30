@@ -63,6 +63,10 @@ const levelOptions = [
     label: "Fatal",
     value: "fatal",
   },
+  {
+    label: "Time",
+    value: "time",
+  },
 ];
 
 const logsData = ref<LogEvent[]>([]);
@@ -313,7 +317,8 @@ onMounted(() => {
               <div
                 class="mx-1 flex cursor-pointer items-center space-x-2 rounded-md px-3 py-1 font-mono text-sm transition-all hover:bg-gray-100"
                 :class="{
-                  'bg-slate-100': index % 2 === 0,
+                  'bg-slate-100': index % 2 === 0 && shownLevels.length === 0,
+                  'bg-blue-50': log.level === 'info' && shownLevels.length > 0,
                   'bg-red-50': log.level === 'error',
                   'bg-red-100': log.level === 'fatal',
                   'bg-yellow-50': log.level === 'warn',
@@ -345,6 +350,12 @@ onMounted(() => {
                     size="12"
                     v-if="log.level === 'fatal'"
                     class="text-red-500"
+                  />
+                  <Icon
+                    name="mingcute:time-fill"
+                    size="20"
+                    v-if="log.level === 'time'"
+                    class="text-green-500"
                   />
                 </div>
                 <div class="w-[166px]">
