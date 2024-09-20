@@ -17,13 +17,23 @@ const channelUrl = ref("");
 const loading = ref(false);
 const liveLogsLoading = ref(false);
 const timelinePeriod = ref(300);
+const logLimit = ref(750);
 const shownLevels = ref<string[]>([]);
 
 const shouldGetLiveLogs = ref(false);
 
 const liveLogsInterval = ref<NodeJS.Timeout | null>(null);
 
+// Generate log limit options with a range of 500 to 1500 with a step of 250
+const logLimitOptions = Array.from({ length: 5 }, (_, i) => i * 250 + 500).map(
+  (value) => ({ label: value.toString(), value }),
+);
+
 const timelinePeriodOptions = [
+  {
+    label: "1 minute",
+    value: 60,
+  },
   {
     label: "5 minutes",
     value: 300,
@@ -32,6 +42,7 @@ const timelinePeriodOptions = [
     label: "1 hour",
     value: 3600,
   },
+  { label: "12 hours", value: 43200 },
   {
     label: "1 day",
     value: 86400,
@@ -155,8 +166,8 @@ const getLiveLogs = async (lastLogId: number, lastLogTimestamp: number) => {
       ];
 
       // Keep only the last 1500 logs
-      if (logsData.value.length > 1500) {
-        logsData.value = logsData.value.slice(0, 1500);
+      if (logsData.value.length > logLimit.value) {
+        logsData.value = logsData.value.slice(0, logLimit.value);
       }
     })
     .catch(() => {
@@ -231,7 +242,7 @@ onMounted(() => {
           show-trigger="arrow-circle"
         >
           <n-collapse
-            :default-expanded-names="['Timeline', 'Live', 'Level']"
+            :default-expanded-names="['Timeline', 'Live', 'Level', 'Limit']"
             :trigger-areas="['main', 'arrow']"
           >
             <n-collapse-item title="Live" name="Live">
@@ -246,6 +257,7 @@ onMounted(() => {
                 </template>
               </n-switch>
             </n-collapse-item>
+
             <n-collapse-item title="Timeline" name="Timeline">
               <n-select
                 v-model:value="timelinePeriod"
@@ -254,6 +266,15 @@ onMounted(() => {
                 :loading="loading"
               />
             </n-collapse-item>
+
+            <n-collapse-item title="Limit" name="Limit">
+              <n-select
+                v-model:value="logLimit"
+                :options="logLimitOptions"
+                :disabled="!shouldGetLiveLogs"
+              />
+            </n-collapse-item>
+
             <n-collapse-item title="Level" name="Level">
               <n-checkbox-group v-model:value="shownLevels">
                 <n-flex vertical>
@@ -297,6 +318,17 @@ onMounted(() => {
               <div class="w-[166px]">Time</div>
               <div class="w-[72px]">Status</div>
               <div class="flex-1">Message</div>
+              <ClientOnly>
+                <div class="flex items-center space-x-1">
+                  <Icon name="la:list" />
+                  <span class="mr-2 text-xs">
+                    {{ filteredLogsData.length || 0 }} logs
+                  </span>
+                </div>
+              </ClientOnly>
+              <div v-if="shouldGetLiveLogs">
+                <n-divider vertical />
+              </div>
               <TransitionFade>
                 <n-tag
                   round
