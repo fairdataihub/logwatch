@@ -36,7 +36,9 @@ export default defineEventHandler(async (event) => {
     console.log(parsedBody.error);
 
     throw createError({
-      message: "The provided parameters are invalid",
+      message: `The provided parameters are invalid: ${parsedBody.error.issues
+        .map((issue) => issue.message)
+        .join(", ")}`,
       statusCode: 400,
     });
   }
