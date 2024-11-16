@@ -124,16 +124,15 @@ onMounted(() => {
 
     if (type === "text") {
       body.message = faker.lorem.sentence();
-      body.level = level;
     } else {
       body.message = JSON.stringify({
         message: faker.lorem.sentence(),
         level,
         timestamp: new Date().toISOString(),
       });
-      body.level = "info";
     }
 
+    body.level = level;
     body.type = type;
 
     await $fetch("/api/log/cm3jkbc6s00083wcqf4xzybql", {

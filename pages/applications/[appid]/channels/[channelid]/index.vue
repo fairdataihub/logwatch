@@ -27,6 +27,7 @@ const liveLogsLoading = ref(false);
 const timelinePeriod = ref(300);
 const logLimit = ref(750);
 const shownLevels = ref<string[]>([]);
+const shownTypes = ref<string[]>([]);
 
 const shouldGetLiveLogs = ref(false);
 
@@ -88,6 +89,17 @@ const levelOptions = [
   },
 ];
 
+const typesOptions = [
+  {
+    label: "Text",
+    value: "text",
+  },
+  {
+    label: "JSON",
+    value: "json",
+  },
+];
+
 const logsData = ref<LogEvent[]>([]);
 
 const { data, error } = await useFetch(
@@ -112,10 +124,28 @@ if (data.value) {
 
 const filteredLogsData = computed(() => {
   if (shownLevels.value.length === 0) {
-    return logsData.value;
-  }
+    if (shownTypes.value.length === 0) {
+      return logsData.value;
+    } else {
+      return logsData.value.filter((log) =>
+        shownTypes.value.includes(log.type),
+      );
+    }
 
-  return logsData.value.filter((log) => shownLevels.value.includes(log.level));
+    return logsData.value;
+  } else {
+    if (shownTypes.value.length === 0) {
+      return logsData.value.filter((log) =>
+        shownLevels.value.includes(log.level),
+      );
+    } else {
+      return logsData.value.filter(
+        (log) =>
+          shownLevels.value.includes(log.level) &&
+          shownTypes.value.includes(log.type),
+      );
+    }
+  }
 });
 
 const onTimelinePeriodChange = async (value: number) => {
@@ -278,7 +308,13 @@ onMounted(() => {
           show-trigger="arrow-circle"
         >
           <n-collapse
-            :default-expanded-names="['Timeline', 'Live', 'Level', 'Limit']"
+            :default-expanded-names="[
+              'Timeline',
+              'Live',
+              'Level',
+              'Limit',
+              'Type',
+            ]"
             :trigger-areas="['main', 'arrow']"
           >
             <n-collapse-item title="Live" name="Live">
@@ -339,6 +375,40 @@ onMounted(() => {
 
                     <span>
                       {{ shownLevels.length }}
+                    </span>
+                  </n-button>
+                </div>
+              </template>
+            </n-collapse-item>
+
+            <n-collapse-item title="Type" name="Type">
+              <n-checkbox-group v-model:value="shownTypes">
+                <n-flex vertical>
+                  <n-checkbox
+                    v-for="type in typesOptions"
+                    :key="type.value"
+                    :value="type.value"
+                  >
+                    {{ type.label }}
+                  </n-checkbox>
+                </n-flex>
+              </n-checkbox-group>
+
+              <template #header-extra>
+                <div class="h-[28px] w-[62px]">
+                  <n-button
+                    quaternary
+                    round
+                    size="small"
+                    @click="shownTypes = []"
+                    v-show="shownTypes.length > 0"
+                  >
+                    <template #icon>
+                      <Icon name="lets-icons:close-ring" />
+                    </template>
+
+                    <span>
+                      {{ shownTypes.length }}
                     </span>
                   </n-button>
                 </div>
