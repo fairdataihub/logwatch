@@ -143,6 +143,6 @@ onMounted(() => {
       },
       body: JSON.stringify(body),
     });
-  }, 1000);
+  }, 4000);
 });
 </script>
