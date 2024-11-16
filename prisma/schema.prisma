@@ -73,6 +73,7 @@ model Log {
 
   message String
   level   String
+  type    String @default("text")
 
   created DateTime @default(now())
 

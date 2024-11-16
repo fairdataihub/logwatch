@@ -16,6 +16,7 @@ export default defineEventHandler(async (event) => {
         z.literal("time"),
       ]),
       message: z.string().optional(),
+      type: z.union([z.literal("json"), z.literal("text")]).optional(),
     })
     .strict();
 
@@ -47,6 +48,7 @@ export default defineEventHandler(async (event) => {
     data: {
       level: parsedBody.data.level || "info",
       message: parsedBody.data.message || "",
+      type: parsedBody.data.type || "text",
       channel_id: channelid,
     },
   });

@@ -14,6 +14,14 @@ const { appid, channelid } = route.params as {
 
 const channelUrl = ref("");
 
+const showDrawer = ref(false);
+const drawerContent = ref({
+  level: "",
+  message: "",
+  type: "",
+  created: new Date(),
+});
+
 const loading = ref(false);
 const liveLogsLoading = ref(false);
 const timelinePeriod = ref(300);
@@ -202,6 +210,34 @@ const copyToClipboard = (text: string) => {
   });
 };
 
+const expandJson = (id: number) => {
+  const log = logsData.value.find((log) => log.id === id);
+
+  if (!log || log.type !== "json") {
+    return;
+  }
+
+  drawerContent.value.level = log.level;
+  drawerContent.value.message = log.message;
+  drawerContent.value.type = log.type;
+  drawerContent.value.created = log.created;
+
+  try {
+    drawerContent.value.message = JSON.parse(log.message);
+  } catch (e: any) {
+    console.error(e);
+    drawerContent.value.message = JSON.parse(
+      JSON.stringify({
+        error: "Check the console for more details",
+        status: "Could not parse JSON",
+        original: log.message,
+      }),
+    );
+  }
+
+  showDrawer.value = true;
+};
+
 onMounted(() => {
   channelUrl.value = `${window.location.origin}/api/log/${channelid}`;
 });
@@ -234,7 +270,7 @@ onMounted(() => {
       </n-flex>
     </div>
 
-    <div class="h-full border-t p-2">
+    <div class="h-full border-t">
       <n-layout has-sider>
         <n-layout-sider
           bordered
@@ -311,7 +347,7 @@ onMounted(() => {
           </n-collapse>
         </n-layout-sider>
 
-        <n-layout class="">
+        <n-layout class="p-2" id="drawer-target">
           <n-layout-header bordered>
             <div class="mx-3 flex space-x-2 px-3 pb-2 pt-1">
               <div class="w-[17px]"></div>
@@ -347,13 +383,16 @@ onMounted(() => {
           <n-layout-content class="px-3 py-2">
             <n-spin :show="loading">
               <div
-                class="mx-1 flex cursor-pointer items-center space-x-2 rounded-md px-3 py-1 font-mono text-sm transition-all hover:bg-gray-100"
+                @click="expandJson(log.id)"
+                class="mx-1 flex items-center space-x-2 rounded-md px-3 py-1 font-mono text-sm transition-all hover:bg-gray-100 hover:bg-opacity-90"
                 :class="{
-                  'bg-slate-100': index % 2 === 0 && shownLevels.length === 0,
+                  'cursor-pointer': log.type === 'json',
+                  'bg-slate-100/60':
+                    index % 2 === 0 && shownLevels.length === 0,
                   'bg-blue-50': log.level === 'info' && shownLevels.length > 0,
-                  'bg-red-50': log.level === 'error',
-                  'bg-red-100': log.level === 'fatal',
-                  'bg-yellow-50': log.level === 'warn',
+                  '!bg-red-50': log.level === 'error',
+                  '!bg-red-100': log.level === 'fatal',
+                  '!bg-yellow-50': log.level === 'warn',
                 }"
                 v-for="(log, index) in filteredLogsData"
                 :key="log.id"
@@ -390,18 +429,120 @@ onMounted(() => {
                     class="text-green-500"
                   />
                 </div>
+
                 <div class="w-[166px]">
                   {{ $dayjs(log.created).format("MMM DD HH:mm:ss.SSS") }}
                 </div>
+
                 <div class="w-[72px]">
                   {{ log.level }}
                 </div>
-                <div class="flex-1">{{ log.message }}</div>
+
+                <div class="flex-1">
+                  {{ log.message }}
+                </div>
+
+                <Icon
+                  name="si:json-fill"
+                  v-if="log.type === 'json'"
+                  size="20"
+                  class="text-pink-500 transition-all hover:text-pink-700"
+                />
+                <Icon
+                  v-else
+                  name="dashicons:text"
+                  size="20"
+                  class="text-pink-500 transition-all hover:text-pink-700"
+                />
               </div>
             </n-spin>
           </n-layout-content>
         </n-layout>
       </n-layout>
     </div>
+
+    <n-drawer
+      v-model:show="showDrawer"
+      :min-width="400"
+      placement="right"
+      to="#drawer-target"
+      resizable
+    >
+      <n-drawer-content title="Info" closable>
+        <n-list>
+          <n-list-item>
+            <div class="flex items-center justify-between space-x-2">
+              <div class="font-semibold">Level</div>
+              <n-flex align="center">
+                <p class="capitalize">
+                  {{ drawerContent.level }}
+                </p>
+                <Icon
+                  name="ic:round-warning"
+                  size="20"
+                  v-if="drawerContent.level === 'warn'"
+                  class="text-yellow-500"
+                />
+                <Icon
+                  name="ph:info-fill"
+                  size="20"
+                  v-if="drawerContent.level === 'info'"
+                  class="text-blue-500"
+                />
+                <Icon
+                  name="clarity:error-solid"
+                  size="20"
+                  v-if="drawerContent.level === 'error'"
+                  class="text-red-500"
+                />
+                <Icon
+                  name="icon-park-solid:error"
+                  size="12"
+                  v-if="drawerContent.level === 'fatal'"
+                  class="text-red-500"
+                />
+                <Icon
+                  name="mingcute:time-fill"
+                  size="20"
+                  v-if="drawerContent.level === 'time'"
+                  class="text-green-500"
+                />
+              </n-flex>
+            </div>
+          </n-list-item>
+          <n-list-item>
+            <div class="flex items-center justify-between space-x-2">
+              <div class="font-semibold">Time</div>
+
+              <p class="font-mono text-sm capitalize">
+                {{
+                  $dayjs(drawerContent.created).format(
+                    "MMMM DD HH:mm:ss.SSS [GMT]Z",
+                  )
+                }}
+              </p>
+            </div>
+          </n-list-item>
+          <n-list-item>
+            <n-flex vertical>
+              <div class="flex items-center justify-between space-x-2">
+                <div class="font-semibold">Content</div>
+              </div>
+
+              <div>
+                <VueJsonPretty
+                  :data="drawerContent.message"
+                  show-line
+                  :deep="1"
+                  highlight-selected-node
+                  collapsed-on-click-brackets
+                  :show-double-quotes="false"
+                />
+              </div>
+            </n-flex>
+          </n-list-item>
+        </n-list>
+      </n-drawer-content>
+    </n-drawer>
   </main>
 </template>

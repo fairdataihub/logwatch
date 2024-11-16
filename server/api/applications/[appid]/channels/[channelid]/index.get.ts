@@ -75,6 +75,7 @@ export default defineEventHandler(async (event) => {
     },
     logs: logs.map((log) => ({
       id: log.id,
+      type: log.type,
       level: log.level,
       message: log.message,
       created: log.created,

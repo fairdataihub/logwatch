@@ -29,6 +29,7 @@ export default defineNuxtConfig({
     "@/assets/css/tailwind.css",
     "notivue/notification.css", // Only needed if using built-in notifications
     "notivue/animations.css", // Only needed if using built-in animations
+    "vue-json-pretty/lib/styles.css",
   ],
 
   devtools: { enabled: true },

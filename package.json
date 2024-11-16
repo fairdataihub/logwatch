@@ -32,6 +32,7 @@
     "nuxt-helm": "^0.0.2",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",
+    "vue-json-pretty": "^2.4.0",
     "vue-router": "^4.3.0",
     "zod": "^3.23.5"
   },

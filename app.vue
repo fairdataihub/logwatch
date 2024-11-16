@@ -17,9 +17,8 @@
 <script setup lang="ts">
 import { pastelTheme } from "notivue";
 import { faker } from "@faker-js/faker";
-import type { ThemeConfig } from "@bg-dev/nuxt-naiveui";
 
-const themeConfig: ThemeConfig = {
+const themeConfig = {
   dark: {}, // Theme options applied on dark mode
   light: {}, // Theme options applied on light mode
   mobile: {}, // Theme options applied on mobile only
@@ -109,24 +108,41 @@ onMounted(() => {
 
     console.log("Logging event");
 
-    await $fetch("/api/log/clxu6ihl00003j1sfrb785hia", {
+    const body: any = {};
+
+    // Switch between text and json
+    const type = faker.helpers.arrayElement(["text", "json"]);
+    const level = faker.helpers.arrayElement([
+      "info",
+      "warn",
+      "error",
+      "debug",
+      "trace",
+      "fatal",
+      "time",
+    ]);
+
+    if (type === "text") {
+      body.message = faker.lorem.sentence();
+      body.level = level;
+    } else {
+      body.message = JSON.stringify({
+        message: faker.lorem.sentence(),
+        level,
+        timestamp: new Date().toISOString(),
+      });
+      body.level = "info";
+    }
+
+    body.type = type;
+
+    await $fetch("/api/log/cm3jkbc6s00083wcqf4xzybql", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        message: faker.lorem.sentence(),
-        level: faker.helpers.arrayElement([
-          "info",
-          "warn",
-          "error",
-          "debug",
-          "trace",
-          "fatal",
-          "time",
-        ]),
-      }),
+      body: JSON.stringify(body),
     });
-  }, 4000);
+  }, 1000);
 });
 </script>
