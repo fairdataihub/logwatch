@@ -36,12 +36,6 @@ COPY --from=builder /app/.output ./
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# Create startup script that runs migrations before starting the app
-RUN echo '#!/bin/sh' > /app/start.sh && \
-  echo 'yarn prisma:migrate deploy' >> /app/start.sh && \
-  echo 'exec node /app/server/index.mjs' >> /app/start.sh && \
-  chmod +x /app/start.sh
-
 EXPOSE 3000
 
-CMD ["/bin/sh", "/app/start.sh"]
+CMD [ "node", "/app/server/index.mjs" ]
