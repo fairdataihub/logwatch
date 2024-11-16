@@ -463,7 +463,8 @@ onMounted(() => {
 
     <n-drawer
       v-model:show="showDrawer"
-      :min-width="400"
+      :min-width="600"
+      :width="600"
       placement="right"
       to="#drawer-target"
       resizable
