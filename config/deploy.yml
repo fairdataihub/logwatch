@@ -41,9 +41,12 @@ builder:
 
 # Inject ENV variables into containers (secrets come from .kamal/secrets).
 #
-# env:
-#   secret:
-#     - xx
+env:
+  secret:
+    - DATABASE_URL
+    - GH_ALLOWED_ORGS
+    - GH_CLIENT_ID
+    - GH_CLIENT_SECRET
 #   clear:
 #     xx: xx
 
