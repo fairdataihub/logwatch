@@ -55,6 +55,7 @@ export default defineNuxtConfig({
       },
     ],
     "nuxt-icon",
+    "nuxt-rate-limit",
   ],
 
   routeRules: {
@@ -72,6 +73,15 @@ export default defineNuxtConfig({
     //   },
     // },
     // preset: "azure",
+  },
+
+  nuxtRateLimit: {
+    routes: {
+      "/api/log/*": {
+        maxRequests: 1000,
+        intervalSeconds: 60,
+      },
+    },
   },
 
   notivue: {
