@@ -7,13 +7,13 @@ interface GitHubUser {
   login: string;
 }
 
-if (!process.env.GITHUB_ALLOWED_ORGS && !process.env.GITHUB_ALLOWED_USERS) {
+if (!process.env.GH_ALLOWED_ORGS && !process.env.GITHUB_ALLOWED_USERS) {
   throw new Error(
-    "GITHUB_ALLOWED_ORGS or GITHUB_ALLOWED_USERS must be provided in the environment",
+    "GH_ALLOWED_ORGS or GITHUB_ALLOWED_USERS must be provided in the environment",
   );
 }
 
-const GITHUB_ALLOWED_ORGS = process.env.GITHUB_ALLOWED_ORGS?.split(",") ?? [];
+const GH_ALLOWED_ORGS = process.env.GH_ALLOWED_ORGS?.split(",") ?? [];
 const GITHUB_ALLOWED_USERS = process.env.GITHUB_ALLOWED_USERS?.split(",") ?? [];
 
 export default defineEventHandler(async (event) => {
@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
      * If no allowed orgs or users are provided, all users are allowed
      */
 
-    if (GITHUB_ALLOWED_ORGS.length > 0) {
+    if (GH_ALLOWED_ORGS.length > 0) {
       const orgsResponse = await fetch(
         `https://api.github.com/users/${githubUser.login}/orgs`,
         {
@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
 
       const orgs = await orgsResponse.json();
 
-      const allowedOrgs = GITHUB_ALLOWED_ORGS;
+      const allowedOrgs = GH_ALLOWED_ORGS;
 
       const userOrgs = orgs.map((org: any) => org.login);
 

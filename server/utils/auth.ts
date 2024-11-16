@@ -15,8 +15,8 @@ const client = new PrismaClient();
 const adapter = new PrismaAdapter(client.session, client.user);
 
 export const github = new GitHub(
-  process.env.GITHUB_CLIENT_ID!,
-  process.env.GITHUB_CLIENT_SECRET!,
+  process.env.GH_CLIENT_ID!,
+  process.env.GH_CLIENT_SECRET!,
 );
 
 export const lucia = new Lucia(adapter, {
