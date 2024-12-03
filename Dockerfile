@@ -39,11 +39,3 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 EXPOSE 3000
 
 CMD [ "node", "/app/server/index.mjs" ]
-
-# RUN echo '#!/bin/sh' > /app/start.sh && \
-#   echo 'exec node /app/server/index.mjs' >> /app/start.sh && \
-#   chmod +x /app/start.sh
-
-# EXPOSE 3000
-
-# CMD ["/bin/sh", "/app/start.sh"]
