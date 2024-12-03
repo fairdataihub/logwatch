@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// generator kysely {
+//   provider = "prisma-kysely"
+
+//   output   = "../types"
+//   fileName = "kysely.ts"
+// }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(cuid())
+
+  github_id Int    @unique
+  username  String @unique
+
+  sessions    Session[]
+  Application Application[]
+}
+
+model Session {
+  id String @id @default(cuid())
+
+  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+}
+
+model Application {
+  id String @id @default(cuid())
+
+  name        String
+  description String @default("")
+
+  user    User   @relation(references: [id], fields: [user_id], onDelete: Cascade)
+  user_id String
+
+  created DateTime @default(now())
+  updated DateTime @updatedAt
+
+  channels Channel[]
+}
+
+model Channel {
+  id String @id @default(cuid())
+
+  name String
+
+  description String @default("")
+
+  public     Boolean @default(false)
+  share_code String  @default(cuid())
+
+  expiration Int
+
+  application    Application @relation(references: [id], fields: [application_id], onDelete: Cascade)
+  application_id String
+
+  created DateTime @default(now())
+  updated DateTime @updatedAt
+
+  Log Log[]
+}
+
+model Log {
+  id Int @id @default(autoincrement())
+
+  message String
+  level   String
+  type    String @default("text")
+  thread  Int    @default(-1)
+
+  created DateTime @default(now())
+
+  channel    Channel @relation(references: [id], fields: [channel_id], onDelete: Cascade)
+  channel_id String
+}
