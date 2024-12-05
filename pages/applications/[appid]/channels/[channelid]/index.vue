@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { faker } from "@faker-js/faker";
 import { generate, count } from "random-words";
 
 definePageMeta({
@@ -123,15 +124,44 @@ if (error.value) {
 if (data.value) {
   logsData.value = data.value.logs as unknown as LogEvent[];
 
+  const threadCodes = faker.helpers.shuffle([
+    "Alpha",
+    "Beta",
+    "Charlie",
+    "Delta",
+    "Echo",
+    "Foxtrot",
+    "Golf",
+    "Hotel",
+    "India",
+    "Juliet",
+    "Kilo",
+    "Lima",
+    "Mike",
+    "November",
+    "Oscar",
+    "Papa",
+    "Quebec",
+    "Romeo",
+    "Sierra",
+    "Tango",
+    "Uniform",
+    "Victor",
+    "Whiskey",
+    "X-Ray",
+    "Yankee",
+    "Zulu",
+  ]);
+
   const uniqueThreadIDs = Array.from(
     new Set(logsData.value.map((log) => log.thread)),
   );
 
-  for (const threadID of uniqueThreadIDs) {
+  for (const [idx, threadID] of uniqueThreadIDs.entries()) {
     if (threadMap.value[threadID]) {
       continue;
     }
-    threadMap.value[threadID] = generate() as string;
+    threadMap.value[threadID] = `${threadCodes[idx]} [${idx + 1}]`;
   }
 
   threadMap.value["-1"] = "";

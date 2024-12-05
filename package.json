@@ -25,14 +25,13 @@
   "dependencies": {
     "@lucia-auth/adapter-prisma": "^4.0.1",
     "@pinia/nuxt": "^0.5.1",
-    "@prisma/client": "^5.15.0",
+    "@prisma/client": "^6.0.1",
     "arctic": "^1.6.2",
     "lucia": "^3.2.0",
     "notivue": "^2.4.4",
     "nuxt": "3.11.1",
     "nuxt-helm": "^0.0.2",
     "pinia": "^2.1.7",
-    "random-words": "^2.0.1",
     "vue": "^3.4.21",
     "vue-json-pretty": "^2.4.0",
     "vue-router": "^4.3.0",
@@ -65,15 +64,15 @@
     "postcss": "^8.4.38",
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.14",
-    "prisma": "^5.15.0",
+    "prisma": "^6.0.1",
     "tailwindcss-debug-screens": "^2.2.1",
     "tsx": "^4.16.2"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "volta": {
-    "node": "18.18.2",
+    "node": "20.18.1",
     "yarn": "1.22.19"
   }
 }
