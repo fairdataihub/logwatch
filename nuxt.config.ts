@@ -79,7 +79,7 @@ export default defineNuxtConfig({
     routes: {
       "/api/log/*": {
         maxRequests: 300,
-        intervalSeconds: 10,
+        intervalSeconds: 5,
       },
     },
   },

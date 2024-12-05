@@ -57,6 +57,7 @@ export default defineEventHandler(async (event) => {
         lte: now.toDate(),
       },
     },
+    take: 1200, // Enforce a limit of 1200 logs for performance reasons
     orderBy: {
       created: "desc",
     },
