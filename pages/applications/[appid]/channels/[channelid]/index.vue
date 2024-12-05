@@ -533,7 +533,7 @@ onMounted(() => {
 
                 <div class="w-[72px]">{{ log.level }}</div>
 
-                <div class="flex-1">
+                <div class="flex-1 break-words">
                   {{ log.message }}
                 </div>
 
