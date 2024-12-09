@@ -1,8 +1,10 @@
 # Name of your application. Used to uniquely configure containers.
-service: logwatch
+# service: logwatch
+service: <%= ENV["KAMAL_APP_NAME"] %>
 
 # Name of the container image.
-image: logwatch
+# image: logwatch
+image: <%= ENV["KAMAL_APP_NAME"] %>
 
 # Deploy to these servers.
 servers:
