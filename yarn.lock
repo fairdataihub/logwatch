@@ -4249,7 +4249,7 @@ debug@2.6.9:
   dependencies:
     ms "2.0.0"
 
-debug@4, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.2, debug@^4.3.4, debug@^4.3.5:
+debug@4, debug@^4.1.1, debug@^4.3.1, debug@^4.3.2, debug@^4.3.4, debug@^4.3.5:
   version "4.3.5"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.5.tgz#e83444eceb9fedd4a1da56d671ae2446a01a6e1e"
   integrity sha512-pt0bNEmneDIvdL1Xsd9oDQ/wrQRkXDT4AUWlNZNPKvW5x/jyO9VFXkJUP07vQ2upmw5PlaITaPKc31jK13V+jg==
@@ -4262,6 +4262,13 @@ debug@^3.1.0, debug@^3.2.7:
   integrity sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==
   dependencies:
     ms "^2.1.1"
+
+debug@^4.1.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-4.4.0.tgz#2b3f2aea2ffeb776477460267377dc8710faba8a"
+  integrity sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==
+  dependencies:
+    ms "^2.1.3"
 
 dedent@^1.0.0:
   version "1.5.3"
@@ -7345,7 +7352,7 @@ ms@2.1.2:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
-ms@2.1.3, ms@^2.1.1:
+ms@2.1.3, ms@^2.1.1, ms@^2.1.3:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
@@ -7483,9 +7490,9 @@ nitropack@^2.9.4:
     unwasm "^0.3.9"
 
 nock@^13.5.4:
-  version "13.5.4"
-  resolved "https://registry.yarnpkg.com/nock/-/nock-13.5.4.tgz#8918f0addc70a63736170fef7106a9721e0dc479"
-  integrity sha512-yAyTfdeNJGGBFxWdzSKCBYxs5FxLbCg5X5Q4ets974hcQzG1+qCxvIyOo4j2Ry6MUlhWVMX4OoYDefAIIwupjw==
+  version "13.5.6"
+  resolved "https://registry.yarnpkg.com/nock/-/nock-13.5.6.tgz#5e693ec2300bbf603b61dae6df0225673e6c4997"
+  integrity sha512-o2zOYiCpzRqSzPj0Zt/dQ/DqZeYoaQ7TUonc/xUPjCGl9WeHpNbxgVvOquXYAaJzI0M9BXV3HTzG0p8IUAbBTQ==
   dependencies:
     debug "^4.1.0"
     json-stringify-safe "^5.0.1"
