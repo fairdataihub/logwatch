@@ -66,6 +66,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  console.log("Body:", JSON.stringify(body, null, 2));
+
   // Check if the body is valid
   const parsedBody = bodySchema.safeParse(body);
 
