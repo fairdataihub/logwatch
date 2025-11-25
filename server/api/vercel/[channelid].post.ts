@@ -66,8 +66,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  console.log("Body:", JSON.stringify(body, null, 2));
-
   // Check if the body is valid
   const parsedBody = bodySchema.safeParse(body);
 
@@ -84,13 +82,15 @@ export default defineEventHandler(async (event) => {
 
   const logs = parsedBody.data.map(async (l) => {
     const level = l.level || "info";
-    const message = JSON.stringify(l) || "{}";
+    const raw = JSON.stringify(l) || "{}";
+    const message = JSON.stringify(l.message) || "{}";
 
     const log = await prisma.log.create({
       data: {
         level,
         message,
         type: "json",
+        raw,
         thread: -1,
         channel_id: channelid,
       },
@@ -103,8 +103,6 @@ export default defineEventHandler(async (event) => {
       });
     }
   });
-
-  console.log("Created logs:", logs.length);
 
   // hacks
   // Delete expired logs. Only run with a random chance of 5%

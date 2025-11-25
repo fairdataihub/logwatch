@@ -20,6 +20,7 @@ const showDrawer = ref(false);
 const drawerContent = ref({
   level: "",
   message: "",
+  raw: "",
   type: "",
   created: new Date(),
 });
@@ -305,18 +306,19 @@ const expandJson = (id: number) => {
 
   drawerContent.value.level = log.level;
   drawerContent.value.message = log.message;
+  drawerContent.value.raw = log.raw;
   drawerContent.value.type = log.type;
   drawerContent.value.created = log.created;
 
   try {
-    drawerContent.value.message = JSON.parse(log.message);
+    drawerContent.value.message = JSON.parse(log.raw || log.message);
   } catch (e: any) {
     console.error(e);
     drawerContent.value.message = JSON.parse(
       JSON.stringify({
         error: "Check the console for more details",
         status: "Could not parse JSON",
-        original: log.message,
+        original: log.raw || log.message,
       }),
     );
   }
@@ -660,7 +662,7 @@ onMounted(() => {
 
               <div>
                 <VueJsonPretty
-                  :data="drawerContent.message"
+                  :data="drawerContent.raw || drawerContent.message"
                   show-line
                   :deep="1"
                   highlight-selected-node

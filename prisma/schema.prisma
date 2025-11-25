@@ -76,6 +76,8 @@ model Log {
   type    String @default("text")
   thread  Int    @default(-1)
 
+  raw String?
+
   created DateTime @default(now())
 
   channel    Channel @relation(references: [id], fields: [channel_id], onDelete: Cascade)

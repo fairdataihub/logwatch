@@ -80,6 +80,7 @@ export default defineEventHandler(async (event) => {
       thread: log.thread,
       level: log.level,
       message: log.message,
+      raw: log.raw,
       created: log.created,
     })),
   };
