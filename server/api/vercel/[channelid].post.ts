@@ -83,7 +83,8 @@ export default defineEventHandler(async (event) => {
   const logs = parsedBody.data.map(async (l) => {
     const level = l.level || "info";
     const raw = JSON.stringify(l) || "{}";
-    const message = JSON.stringify(l.message) || "{}";
+    const message =
+      JSON.stringify(l.message) || l.message || "No message provided" || "{}";
 
     const log = await prisma.log.create({
       data: {
