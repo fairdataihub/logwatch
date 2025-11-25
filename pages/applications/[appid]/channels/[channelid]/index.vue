@@ -20,7 +20,7 @@ const showDrawer = ref(false);
 const drawerContent = ref({
   level: "",
   message: "",
-  raw: "",
+  raw: {},
   type: "",
   created: new Date(),
 });
@@ -306,12 +306,12 @@ const expandJson = (id: number) => {
 
   drawerContent.value.level = log.level;
   drawerContent.value.message = log.message;
-  drawerContent.value.raw = log.raw;
+  drawerContent.value.raw = JSON.parse(log.raw || "{}");
   drawerContent.value.type = log.type;
   drawerContent.value.created = log.created;
 
   try {
-    drawerContent.value.message = JSON.parse(log.raw || log.message);
+    drawerContent.value.message = JSON.parse(log.message);
   } catch (e: any) {
     console.error(e);
     drawerContent.value.message = JSON.parse(
@@ -651,6 +651,14 @@ onMounted(() => {
                     "MMMM DD HH:mm:ss.SSS [GMT]Z",
                   )
                 }}
+              </p>
+            </div>
+          </n-list-item>
+          <n-list-item>
+            <div class="flex items-center justify-between space-x-2">
+              <div class="font-semibold">Message</div>
+              <p class="font-mono text-sm capitalize">
+                {{ drawerContent.message }}
               </p>
             </div>
           </n-list-item>
