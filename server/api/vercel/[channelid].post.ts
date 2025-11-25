@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
       deploymentId: z.string(),
       source: z.string(),
       host: z.string(),
-      timestamp: z.bigint(),
+      timestamp: z.number(),
       projectId: z.string(),
       level: z.string(),
       message: z.string().optional(),
@@ -32,11 +32,11 @@ export default defineEventHandler(async (event) => {
       spanId: z.string().optional(),
       proxy: z
         .object({
-          timestamp: z.bigint(),
+          timestamp: z.number(),
           method: z.string(),
           host: z.string(),
           path: z.string(),
-          userAgent: z.string(),
+          userAgent: z.array(z.string()),
           region: z.string(),
           referer: z.string().optional(),
           statusCode: z.number().optional(),

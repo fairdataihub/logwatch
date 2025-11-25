@@ -12,7 +12,10 @@ export default defineEventHandler(async (event) => {
       !verifyRequestOrigin(originHeader, [hostHeader])
     ) {
       // Check if in the /log api endpoint
-      if (event.node.req.url?.startsWith("/api/log")) {
+      if (
+        event.node.req.url?.startsWith("/api/log") ||
+        event.node.req.url?.startsWith("/api/vercel")
+      ) {
         return;
       }
 
