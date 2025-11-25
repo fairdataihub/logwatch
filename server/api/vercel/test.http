@@ -1,0 +1,7 @@
+POST https://logwatch.fairhub.io/api/drain/clxu6ihl00003j1sfrb785hia
+Content-Type: application/json
+
+<request>
+<message>Arma cavus animadverto agnitio vulariter tergiversatio.</message>
+<level>error</level>
+</request>
