@@ -652,12 +652,17 @@ onMounted(() => {
             </div>
           </n-list-item>
           <n-list-item>
-            <div class="flex items-center justify-between space-x-2">
-              <div class="font-semibold">Message</div>
-              <p class="font-mono text-sm capitalize">
-                {{ drawerContent.message }}
-              </p>
-            </div>
+            <n-flex vertical>
+              <div class="flex items-center justify-between space-x-2">
+                <div class="font-semibold">Message</div>
+              </div>
+
+              <div>
+                <p class="font-mono text-sm capitalize">
+                  {{ drawerContent.message }}
+                </p>
+              </div>
+            </n-flex>
           </n-list-item>
           <n-list-item>
             <n-flex vertical>
