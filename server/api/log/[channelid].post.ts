@@ -16,6 +16,7 @@ export default defineEventHandler(async (event) => {
         z.literal("time"),
       ]),
       message: z.string().optional(),
+      raw: z.string().optional(),
       type: z.union([z.literal("json"), z.literal("text")]).optional(),
       thread: z.number().optional(),
     })
@@ -49,6 +50,7 @@ export default defineEventHandler(async (event) => {
     data: {
       level: parsedBody.data.level || "info",
       message: parsedBody.data.message || "",
+      raw: parsedBody.data.raw || null,
       type: parsedBody.data.type || "text",
       thread: parsedBody.data.thread || -1,
       channel_id: channelid,
