@@ -67,6 +67,7 @@ export default defineEventHandler(async (event) => {
       thread: log.thread,
       type: log.type,
       message: log.message,
+      raw: log.raw,
     })),
   };
 });
