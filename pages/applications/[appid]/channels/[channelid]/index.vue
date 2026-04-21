@@ -417,8 +417,7 @@ onUnmounted(() => {
             :log-count="filteredLogsData.length"
             :pending-count="pendingLogs.length"
             :is-live="shouldGetLiveLogs"
-            :search-term="searchTerm"
-            @update:search-term="searchTerm = $event"
+            v-model:searchTerm="searchTerm"
             @flush-pending="flushPendingLogs"
           />
           <n-layout-content>
