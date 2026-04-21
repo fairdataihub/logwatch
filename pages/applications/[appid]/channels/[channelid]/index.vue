@@ -16,15 +16,6 @@ const { appid, channelid } = route.params as {
 
 const channelUrl = ref("");
 
-const showDrawer = ref(false);
-const drawerContent = ref({
-  level: "",
-  message: "",
-  raw: {},
-  type: "",
-  created: new Date(),
-});
-
 const loading = ref(false);
 const liveLogsLoading = ref(false);
 const timelinePeriod = ref(300);
@@ -33,6 +24,11 @@ const shownLevels = ref<string[]>([]);
 const shownTypes = ref<string[]>([]);
 const threadMap = ref<Record<number, string>>({});
 const shouldGetLiveLogs = ref(false);
+
+const pendingLogs = ref<LogEvent[]>([]);
+const searchTerm = ref("");
+const logListEl = ref<HTMLElement | null>(null);
+const newLogIds = ref<Set<number>>(new Set());
 
 const threadCodes = faker.helpers.shuffle([
   "Alpha",
@@ -65,71 +61,31 @@ const threadCodes = faker.helpers.shuffle([
 
 const liveLogsInterval = ref<NodeJS.Timeout | null>(null);
 
-// Generate log limit options with a range of 500 to 1500 with a step of 250
 const logLimitOptions = Array.from({ length: 5 }, (_, i) => i * 250 + 500).map(
   (value) => ({ label: value.toString(), value }),
 );
 
 const timelinePeriodOptions = [
-  {
-    label: "1 minute",
-    value: 60,
-  },
-  {
-    label: "5 minutes",
-    value: 300,
-  },
-  {
-    label: "1 hour",
-    value: 3600,
-  },
+  { label: "1 minute", value: 60 },
+  { label: "5 minutes", value: 300 },
+  { label: "1 hour", value: 3600 },
   { label: "12 hours", value: 43200 },
-  {
-    label: "1 day",
-    value: 86400,
-  },
+  { label: "1 day", value: 86400 },
 ];
 
 const levelOptions = [
-  {
-    label: "Debug",
-    value: "debug",
-  },
-  {
-    label: "Trace",
-    value: "trace",
-  },
-  {
-    label: "Info",
-    value: "info",
-  },
-  {
-    label: "Warn",
-    value: "warn",
-  },
-  {
-    label: "Error",
-    value: "error",
-  },
-  {
-    label: "Fatal",
-    value: "fatal",
-  },
-  {
-    label: "Time",
-    value: "time",
-  },
+  { label: "Debug", value: "debug" },
+  { label: "Trace", value: "trace" },
+  { label: "Info", value: "info" },
+  { label: "Warn", value: "warn" },
+  { label: "Error", value: "error" },
+  { label: "Fatal", value: "fatal" },
+  { label: "Time", value: "time" },
 ];
 
 const typesOptions = [
-  {
-    label: "Text",
-    value: "text",
-  },
-  {
-    label: "JSON",
-    value: "json",
-  },
+  { label: "Text", value: "text" },
+  { label: "JSON", value: "json" },
 ];
 
 const logsData = ref<LogEvent[]>([]);
@@ -146,7 +102,6 @@ const { data, error } = await useFetch(
 
 if (error.value) {
   push.error("Failed to fetch channel data.");
-
   await navigateTo("/applications");
 }
 
@@ -167,57 +122,42 @@ if (data.value) {
   threadMap.value["-1"] = "";
 }
 
+/** Applies level, type, and message search filters to the master log array. */
 const filteredLogsData = computed(() => {
-  if (shownLevels.value.length === 0) {
-    if (shownTypes.value.length === 0) {
-      return logsData.value;
-    } else {
-      return logsData.value.filter((log) =>
-        shownTypes.value.includes(log.type),
-      );
-    }
-  } else {
-    if (shownTypes.value.length === 0) {
-      return logsData.value.filter((log) =>
-        shownLevels.value.includes(log.level),
-      );
-    } else {
-      return logsData.value.filter(
-        (log) =>
-          shownLevels.value.includes(log.level) &&
-          shownTypes.value.includes(log.type),
-      );
-    }
+  let result = logsData.value;
+
+  if (shownLevels.value.length > 0) {
+    result = result.filter((log) => shownLevels.value.includes(log.level));
   }
+
+  if (shownTypes.value.length > 0) {
+    result = result.filter((log) => shownTypes.value.includes(log.type));
+  }
+
+  if (searchTerm.value.trim()) {
+    const term = searchTerm.value.toLowerCase();
+    result = result.filter((log) => log.message.toLowerCase().includes(term));
+  }
+
+  return result;
 });
 
+/** Reloads logs from the server when the user picks a different timeline period. */
 const onTimelinePeriodChange = async (value: number) => {
-  if (value === 0) {
-    // Live
-    return;
-  }
-
-  if (value === timelinePeriod.value) {
-    return;
-  }
+  if (value === 0 || value === timelinePeriod.value) return;
 
   timelinePeriod.value = value;
-
   loading.value = true;
 
   await $fetch(`/api/applications/${appid}/channels/${channelid}`, {
     headers: useRequestHeaders(["cookie"]),
-    query: {
-      period: value,
-    },
+    query: { period: value },
   })
     .then((res) => {
-      console.log("onTimelinePeriodChange", res);
       logsData.value = res.logs as unknown as LogEvent[];
     })
     .catch(() => {
       push.error("Failed to fetch channel data.");
-
       navigateTo("/applications");
     })
     .finally(() => {
@@ -225,6 +165,32 @@ const onTimelinePeriodChange = async (value: number) => {
     });
 };
 
+/** Assigns a human-readable label (e.g. "Alpha [1]") to any thread ID not yet tracked. */
+const updateThreadMap = (logs: LogEvent[]) => {
+  const uniqueThreadIDs = Array.from(new Set(logs.map((log) => log.thread)));
+
+  for (const [idx, threadID] of uniqueThreadIDs.entries()) {
+    if (threadMap.value[threadID]) continue;
+    threadMap.value[threadID] = `${threadCodes[idx]} [${idx + 1}]`;
+  }
+
+  threadMap.value["-1"] = "";
+};
+
+/** Moves buffered live logs into the visible list and scrolls to the top. */
+const flushPendingLogs = () => {
+  const incoming = pendingLogs.value;
+  newLogIds.value = new Set(incoming.map((l) => l.id));
+  logsData.value = [...incoming, ...logsData.value].slice(0, logLimit.value);
+  pendingLogs.value = [];
+  nextTick(() => logListEl.value?.scrollTo({ top: 0, behavior: "smooth" }));
+  setTimeout(() => { newLogIds.value = new Set(); }, 2000);
+};
+
+/**
+ * Fetches logs newer than lastLogId and queues them in pendingLogs.
+ * Auto-flushes immediately if the user is already scrolled to the top.
+ */
 const getLiveLogs = async (lastLogId: number, lastLogTimestamp: number) => {
   liveLogsLoading.value = true;
 
@@ -236,45 +202,32 @@ const getLiveLogs = async (lastLogId: number, lastLogTimestamp: number) => {
     },
   })
     .then((res) => {
-      if (res.logs.length === 0) {
-        return;
-      }
+      if (res.logs.length === 0) return;
 
-      // Add the new logs to the beginning of the array
-      logsData.value = [
-        ...(res.logs as unknown as LogEvent[]),
-        ...(logsData.value as unknown as LogEvent[]),
-      ];
+      const incoming = res.logs as unknown as LogEvent[];
+      pendingLogs.value = [...incoming, ...pendingLogs.value];
 
-      // Keep only the last 1500 logs
-      if (logsData.value.length > logLimit.value) {
-        logsData.value = logsData.value.slice(0, logLimit.value);
-      }
+      const allLogs = [...pendingLogs.value, ...logsData.value];
+      updateThreadMap(allLogs);
 
-      // Update thread map
-      const uniqueThreadIDs = Array.from(
-        new Set(logsData.value.map((log) => log.thread)),
-      );
-
-      for (const [idx, threadID] of uniqueThreadIDs.entries()) {
-        if (threadMap.value[threadID]) {
-          continue;
-        }
-        threadMap.value[threadID] = `${threadCodes[idx]} [${idx + 1}]`;
-      }
-
-      threadMap.value["-1"] = "";
+      const isAtTop = (logListEl.value?.scrollTop ?? 0) < 50;
+      if (isAtTop) flushPendingLogs();
     })
     .catch(() => {
-      push.error("Failed to fetch channel data.");
+      push.error("Failed to fetch live logs.");
     })
     .finally(() => {
       liveLogsLoading.value = false;
     });
 };
 
+/**
+ * Starts or stops the 2-second live polling interval.
+ * Uses Math.max across all known IDs to avoid re-fetching already-seen logs.
+ */
 const setLiveLogs = async (value: boolean) => {
   if (!value) {
+    flushPendingLogs();
     if (liveLogsInterval.value) {
       clearInterval(liveLogsInterval.value);
     }
@@ -282,10 +235,15 @@ const setLiveLogs = async (value: boolean) => {
   }
 
   liveLogsInterval.value = setInterval(async () => {
-    // Get the timestamp of the last log
-    const lastLogId = logsData.value.length > 0 ? logsData.value[0].id : 0;
+    const allKnown = [...pendingLogs.value, ...logsData.value];
+
+    const lastLogId =
+      allKnown.length > 0 ? Math.max(...allKnown.map((l) => l.id)) : 0;
+
     const lastLogTimestamp =
-      logsData.value.length > 0 ? dayjs(logsData.value[0].created).unix() : 0;
+      allKnown.length > 0
+        ? Math.max(...allKnown.map((l) => dayjs(l.created).unix()))
+        : 0;
 
     await getLiveLogs(lastLogId, lastLogTimestamp);
   }, 2000);
@@ -297,34 +255,19 @@ const copyToClipboard = (text: string) => {
   });
 };
 
-const expandJson = (id: number) => {
-  const log = logsData.value.find((log) => log.id === id);
-
-  if (!log || log.type !== "json") {
-    return;
+const onLogListScroll = () => {
+  if (pendingLogs.value.length > 0 && (logListEl.value?.scrollTop ?? 0) < 50) {
+    flushPendingLogs();
   }
-
-  drawerContent.value.level = log.level;
-  drawerContent.value.message = log.message;
-  drawerContent.value.type = log.type;
-  drawerContent.value.created = log.created;
-
-  try {
-    drawerContent.value.raw = JSON.parse(log.raw);
-  } catch (e: any) {
-    console.error(e);
-    drawerContent.value.raw = {
-      error: "Check the console for more details",
-      status: "Could not parse JSON",
-      original: log.raw,
-    };
-  }
-
-  showDrawer.value = true;
 };
 
 onMounted(() => {
   channelUrl.value = `${window.location.origin}/api/log/${channelid}`;
+  logListEl.value?.addEventListener('scroll', onLogListScroll, { passive: true });
+});
+
+onUnmounted(() => {
+  logListEl.value?.removeEventListener('scroll', onLogListScroll);
 });
 </script>
 
@@ -350,7 +293,7 @@ onMounted(() => {
               </template>
             </n-tag>
           </template>
-          <span> Click to copy channel collection endpoint </span>
+          <span>Click to copy channel collection endpoint</span>
         </n-tooltip>
       </n-flex>
     </div>
@@ -359,8 +302,9 @@ onMounted(() => {
       <n-layout has-sider>
         <n-layout-sider
           bordered
-          content-style="padding: 10px 24px 24px 24px"
+          content-style="padding: 10px 16px 24px 16px"
           show-trigger="arrow-circle"
+          :width="200"
         >
           <n-collapse
             :default-expanded-names="[
@@ -427,10 +371,7 @@ onMounted(() => {
                     <template #icon>
                       <Icon name="lets-icons:close-ring" />
                     </template>
-
-                    <span>
-                      {{ shownLevels.length }}
-                    </span>
+                    <span>{{ shownLevels.length }}</span>
                   </n-button>
                 </div>
               </template>
@@ -461,10 +402,7 @@ onMounted(() => {
                     <template #icon>
                       <Icon name="lets-icons:close-ring" />
                     </template>
-
-                    <span>
-                      {{ shownTypes.length }}
-                    </span>
+                    <span>{{ shownTypes.length }}</span>
                   </n-button>
                 </div>
               </template>
@@ -472,218 +410,51 @@ onMounted(() => {
           </n-collapse>
         </n-layout-sider>
 
-        <n-layout class="p-2" id="drawer-target">
-          <n-layout-header bordered>
-            <div class="mx-3 flex space-x-2 px-3 pb-2 pt-1">
-              <div class="w-[17px]"></div>
-              <div class="w-[166px]">Time</div>
-              <div class="w-[72px]">Status</div>
-              <div class="flex-1">Message</div>
-              <ClientOnly>
-                <div class="flex items-center space-x-1">
-                  <Icon name="la:list" />
-                  <span class="mr-2 text-xs">
-                    {{ filteredLogsData.length || 0 }} logs
-                  </span>
-                </div>
-              </ClientOnly>
-              <div v-if="shouldGetLiveLogs">
-                <n-divider vertical />
-              </div>
-              <TransitionFade>
-                <n-tag
-                  round
-                  :bordered="false"
-                  type="info"
-                  v-if="shouldGetLiveLogs"
-                >
-                  Loading new logs
-                  <template #icon>
-                    <Icon name="svg-spinners:6-dots-scale-middle" />
-                  </template>
-                </n-tag>
-              </TransitionFade>
-            </div>
-          </n-layout-header>
-          <n-layout-content class="px-3 py-2">
+        <n-layout>
+          <LogToolbar
+            :log-count="filteredLogsData.length"
+            :pending-count="pendingLogs.length"
+            :is-live="shouldGetLiveLogs"
+            :search-term="searchTerm"
+            @update:search-term="searchTerm = $event"
+            @flush-pending="flushPendingLogs"
+          />
+          <n-layout-content>
             <n-spin :show="loading">
               <div
-                @click="expandJson(log.id)"
-                class="mx-1 flex items-center space-x-2 rounded-md px-3 py-1 font-mono text-sm transition-all hover:bg-gray-100 hover:bg-opacity-90"
-                :class="{
-                  'cursor-pointer': log.type === 'json',
-                  'bg-slate-100/60':
-                    index % 2 === 0 && shownLevels.length === 0,
-                  'bg-blue-50': log.level === 'info' && shownLevels.length > 0,
-                  '!bg-red-50': log.level === 'error',
-                  '!bg-red-100': log.level === 'fatal',
-                  '!bg-yellow-50': log.level === 'warn',
-                }"
-                v-for="(log, index) in filteredLogsData"
-                :key="log.id"
+                ref="logListEl"
+                class="overflow-y-auto"
+                style="height: calc(100vh - 165px)"
               >
-                <div class="flex w-[17px] items-center justify-center">
-                  <Icon
-                    name="ic:round-warning"
-                    size="20"
-                    v-if="log.level === 'warn'"
-                    class="text-yellow-500"
-                  />
-                  <Icon
-                    name="ph:info-fill"
-                    size="20"
-                    v-if="log.level === 'info'"
-                    class="text-blue-500"
-                  />
-                  <Icon
-                    name="clarity:error-solid"
-                    size="20"
-                    v-if="log.level === 'error'"
-                    class="text-red-500"
-                  />
-                  <Icon
-                    name="icon-park-solid:error"
-                    size="12"
-                    v-if="log.level === 'fatal'"
-                    class="text-red-500"
-                  />
-                  <Icon
-                    name="mingcute:time-fill"
-                    size="20"
-                    v-if="log.level === 'time'"
-                    class="text-green-500"
-                  />
+                <div
+                  class="sticky top-0 z-10 grid items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs font-semibold uppercase tracking-wider text-slate-400"
+                  style="grid-template-columns: 20px 90px 52px 1fr auto 20px"
+                >
+                  <div />
+                  <span>Time</span>
+                  <span>Level</span>
+                  <span>Message</span>
+                  <span>Thread</span>
+                  <div />
                 </div>
-
-                <div class="w-[166px]">
-                  {{ $dayjs(log.created).format("MMM DD HH:mm:ss.SSS") }}
-                </div>
-
-                <div class="w-[72px]">{{ log.level }}</div>
-
-                <div class="flex-1 break-all">
-                  {{ log.message }}
-                </div>
-
-                <div class="px-1 text-[10px] text-pink-600">
-                  {{ threadMap[log.thread] || "" }}
-                </div>
-
-                <Icon
-                  name="si:json-fill"
-                  v-if="log.type === 'json'"
-                  size="20"
-                  class="text-pink-500 transition-all hover:text-pink-700"
+                <LogRow
+                  v-for="log in filteredLogsData"
+                  :key="log.id"
+                  :log="log"
+                  :thread-label="threadMap[log.thread] || ''"
+                  :is-new="newLogIds.has(log.id)"
                 />
-                <Icon
-                  v-else
-                  name="dashicons:text"
-                  size="20"
-                  class="text-pink-500 transition-all hover:text-pink-700"
-                />
+                <div
+                  v-if="filteredLogsData.length === 0 && !loading"
+                  class="py-16 text-center text-sm text-slate-400"
+                >
+                  No logs to display
+                </div>
               </div>
             </n-spin>
           </n-layout-content>
         </n-layout>
       </n-layout>
     </div>
-
-    <n-drawer
-      v-model:show="showDrawer"
-      :min-width="600"
-      :width="600"
-      placement="right"
-      to="#drawer-target"
-      resizable
-    >
-      <n-drawer-content title="Info" closable>
-        <n-list>
-          <n-list-item>
-            <div class="flex items-center justify-between space-x-2">
-              <div class="font-semibold">Level</div>
-              <n-flex align="center">
-                <p class="capitalize">
-                  {{ drawerContent.level }}
-                </p>
-                <Icon
-                  name="ic:round-warning"
-                  size="20"
-                  v-if="drawerContent.level === 'warn'"
-                  class="text-yellow-500"
-                />
-                <Icon
-                  name="ph:info-fill"
-                  size="20"
-                  v-if="drawerContent.level === 'info'"
-                  class="text-blue-500"
-                />
-                <Icon
-                  name="clarity:error-solid"
-                  size="20"
-                  v-if="drawerContent.level === 'error'"
-                  class="text-red-500"
-                />
-                <Icon
-                  name="icon-park-solid:error"
-                  size="12"
-                  v-if="drawerContent.level === 'fatal'"
-                  class="text-red-500"
-                />
-                <Icon
-                  name="mingcute:time-fill"
-                  size="20"
-                  v-if="drawerContent.level === 'time'"
-                  class="text-green-500"
-                />
-              </n-flex>
-            </div>
-          </n-list-item>
-          <n-list-item>
-            <div class="flex items-center justify-between space-x-2">
-              <div class="font-semibold">Time</div>
-
-              <p class="font-mono text-sm capitalize">
-                {{
-                  $dayjs(drawerContent.created).format(
-                    "MMMM DD HH:mm:ss.SSS [GMT]Z",
-                  )
-                }}
-              </p>
-            </div>
-          </n-list-item>
-          <n-list-item>
-            <n-flex vertical>
-              <div class="flex items-center justify-between space-x-2">
-                <div class="font-semibold">Message</div>
-              </div>
-
-              <div>
-                <p class="font-mono text-sm capitalize">
-                  {{ drawerContent.message }}
-                </p>
-              </div>
-            </n-flex>
-          </n-list-item>
-          <n-list-item>
-            <n-flex vertical>
-              <div class="flex items-center justify-between space-x-2">
-                <div class="font-semibold">Content</div>
-              </div>
-
-              <div>
-                <VueJsonPretty
-                  :data="drawerContent.raw"
-                  show-line
-                  :deep="1"
-                  highlight-selected-node
-                  collapsed-on-click-brackets
-                  :show-double-quotes="false"
-                />
-              </div>
-            </n-flex>
-          </n-list-item>
-        </n-list>
-      </n-drawer-content>
-    </n-drawer>
   </main>
 </template>
