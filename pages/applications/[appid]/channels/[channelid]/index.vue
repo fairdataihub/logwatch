@@ -148,6 +148,8 @@ const onTimelinePeriodChange = async (value: number) => {
 
   timelinePeriod.value = value;
   loading.value = true;
+  pendingLogs.value = [];
+  newLogIds.value = new Set();
 
   await $fetch(`/api/applications/${appid}/channels/${channelid}`, {
     headers: useRequestHeaders(["cookie"]),
@@ -205,7 +207,7 @@ const getLiveLogs = async (lastLogId: number, lastLogTimestamp: number) => {
       if (res.logs.length === 0) return;
 
       const incoming = res.logs as unknown as LogEvent[];
-      pendingLogs.value = [...incoming, ...pendingLogs.value];
+      pendingLogs.value = [...incoming, ...pendingLogs.value].slice(0, logLimit.value);
 
       const allLogs = [...pendingLogs.value, ...logsData.value];
       updateThreadMap(allLogs);
